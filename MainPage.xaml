@@ -1,0 +1,78 @@
+```csharp
+using System.Collections.ObjectModel;
+using MlbbHelper.Models;
+using MlbbHelper.Services;
+
+namespace MlbbHelper;
+
+public partial class MainPage : ContentPage
+{
+    readonly ObservableCollection<Hero> _shown = new();
+    bool _started;
+
+    public MainPage()
+    {
+        InitializeComponent();
+        HeroList.ItemsSource = _shown;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        if (_started) return;
+        _started = true;
+
+        await DataService.Instance.LoadAsync();
+        ApplyFilter();
+        await CheckUpdatesAsync();
+    }
+
+    void ApplyFilter()
+    {
+        var list = DataService.Instance.Search(SearchEntry.Text ?? "");
+        _shown.Clear();
+        foreach (var hero in list)
+            _shown.Add(hero);
+
+        var data = DataService.Instance.Data;
+        PatchLabel.Text = $"Патч {data.Patch}  •  героев: {data.Heroes.Count}";
+    }
+
+    async Task CheckUpdatesAsync()
+    {
+        StatusLabel.Text = "Проверка обновлений…";
+        var result = await DataService.Instance.UpdateAsync();
+        switch (result)
+        {
+            case UpdateResult.Updated:
+                ApplyFilter();
+                StatusLabel.Text = $"Данные обновлены до патча {DataService.Instance.Data.Patch}";
+                break;
+            case UpdateResult.UpToDate:
+                StatusLabel.Text = "Установлены актуальные данные";
+                break;
+            default:
+                StatusLabel.Text = "Нет соединения. Используются сохранённые данные";
+                break;
+        }
+
+        // Поиск портретов героев; список обновляется, если найдены новые картинки
+        if (await DataService.Instance.ResolveImagesAsync())
+            ApplyFilter();
+    }
+
+    void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyFilter();
+
+    async void OnRefreshing(object? sender, EventArgs e)
+    {
+        await CheckUpdatesAsync();
+        Refresh.IsRefreshing = false;
+    }
+
+    async void OnHeroTapped(object? sender, TappedEventArgs e)
+    {
+        if (sender is BindableObject view && view.BindingContext is Hero hero)
+            await Navigation.PushAsync(new HeroPage(hero));
+    }
+}
+```
