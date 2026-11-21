@@ -1,4 +1,6 @@
-```csharp
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
+
 namespace MlbbHelper;
 
 public partial class App : Application
@@ -11,7 +13,12 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new NavigationPage(new MainPage()));
+        var navigation = new NavigationPage(new MainPage())
+        {
+            BarBackgroundColor = Color.FromArgb("#08172B"),
+            BarTextColor = Color.FromArgb("#EDF7FF")
+        };
+
+        return new Window(navigation);
     }
 }
-```

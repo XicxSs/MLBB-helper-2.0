@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MlbbHelper.AboutPage"
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="#07101F">
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#050B18" Offset="0" />
+                <GradientStop Color="#0A1B39" Offset="0.55" />
+                <GradientStop Color="#061022" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
+        <ScrollView>
+            <VerticalStackLayout Padding="18,20,18,32" Spacing="16">
+                <Button Text="‹  Назад" Clicked="OnBackTapped"
+                        HorizontalOptions="Start" Padding="12,6" CornerRadius="18"
+                        FontSize="14" TextColor="#D8F2FF" BackgroundColor="#23325370"
+                        BorderColor="#567CB3DD" BorderWidth="1" />
+
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="О приложении" FontSize="28" FontAttributes="Bold"
+                           TextColor="#EDF7FF" />
+                    <Label Text="MLBB Помощник · версия 1.0.0" FontSize="13"
+                           TextColor="#9ABBE0" />
+                </VerticalStackLayout>
+
+                <Border Style="{StaticResource Glass}" Padding="15">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Независимый справочник для Mobile Legends: Bang Bang."
+                               FontSize="15" FontAttributes="Bold" TextColor="#EAF6FF" />
+                        <Label Text="Приложение не связано с Moonton, не одобрено и не спонсируется этой компанией. Оно не подключается к игровому аккаунту и не изменяет игровой клиент."
+                               FontSize="13" TextColor="#B3CDE6" LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="Источники данных" FontSize="19" FontAttributes="Bold"
+                       TextColor="#EDF7FF" />
+                <Border Style="{StaticResource Glass}" Padding="15">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="• Список героев и сведения о патчах: MLBBDex и Mobile Legends Wiki."
+                               FontSize="13" TextColor="#C5DCEF" />
+                        <Label Text="• Статистика контрпиков и сборок: Rone Arena. Значения винрейта могут различаться по рангу, региону и времени сбора данных."
+                               FontSize="13" TextColor="#C5DCEF" />
+                        <Label Text="• Портреты и часть справочных материалов адаптированы из Mobile Legends Wiki и распространяются по лицензии CC BY-SA. Условия лицензии распространяются на производные материалы."
+                               FontSize="13" TextColor="#C5DCEF" />
+                        <Button Text="Открыть MLBBDex" Clicked="OnMlbbDexTapped"
+                                HorizontalOptions="Start" Padding="12,7" CornerRadius="16"
+                                TextColor="#D9F3FF" BackgroundColor="#2C4071A8" />
+                        <Button Text="Открыть Rone Arena" Clicked="OnRoneTapped"
+                                HorizontalOptions="Start" Padding="12,7" CornerRadius="16"
+                                TextColor="#D9F3FF" BackgroundColor="#2C4071A8" />
+                        <Button Text="Открыть Mobile Legends Wiki" Clicked="OnWikiTapped"
+                                HorizontalOptions="Start" Padding="12,7" CornerRadius="16"
+                                TextColor="#D9F3FF" BackgroundColor="#2C4071A8" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Text="Все права на игру, героев, названия и оригинальные игровые материалы принадлежат их правообладателям, включая Shanghai Moonton Technology Co., Ltd. Справочная статистика предоставляется только для ознакомления."
+                       FontSize="11" TextColor="#809BB7" LineBreakMode="WordWrap" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

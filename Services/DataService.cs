@@ -1,760 +1,163 @@
-Привет, мне нужно написать полноценное андроид приложение MLBB helper, писать на c#. Функции 1. Выб
-claude-sonnet-5-5-high
-# Все блоки по порядку: что называть и куда вставлять
-
-Файлов всего **14**. Для каждого блока вы делаете одно и то же:
-
-1. На странице репозитория нажмите **Add file → Create new file**.
-2. В **верхнее узкое поле** (Name your file…) вставьте имя из пункта «Имя файла». Знак `/` создаёт папку сам.
-3. В **большое поле ниже** вставьте код из пункта «Содержимое».
-4. Нажмите зелёную кнопку **Commit changes…**, затем ещё раз **Commit changes** в окне.
-
-**Блоки нужно создавать по порядку. Блок 14 идёт последним, потому что он запускает сборку.**
-
-Я добавил в блок 1 одну строку, которой не было раньше. Она нужна, чтобы файл `heroes.json` гарантированно попал внутрь приложения. Если вы уже создали блок 1 по старой версии, откройте файл, нажмите ✏️ и замените содержимое.
-
-## Как получится структура
-
-```
-mlbb-helper (репозиторий)
-├── MlbbHelper.csproj                  ← блок 1
-├── MauiProgram.cs                     ← блок 2
-├── App.xaml                           ← блок 3
-├── App.xaml.cs                        ← блок 4
-├── MainPage.xaml                      ← блок 5
-├── MainPage.xaml.cs                   ← блок 6
-├── HeroPage.xaml                      ← блок 7
-├── HeroPage.xaml.cs                   ← блок 8
-├── Models/Hero.cs                     ← блок 9
-├── Services/DataService.cs            ← блок 10 (нужна правка логина)
-├── Platforms/Android/MainActivity.cs  ← блок 11
-├── Platforms/Android/AndroidManifest.xml ← блок 12
-├── Resources/Raw/heroes.json          ← блок 13
-└── .github/workflows/build.yml        ← блок 14 (последним)
-```
-
----
-
-## БЛОК 1
-
-**Имя файла:**
-```
-MlbbHelper.csproj
-```
-**Содержимое:**
-```xml
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFrameworks>net8.0-android</TargetFrameworks>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>MlbbHelper</RootNamespace>
-    <UseMaui>true</UseMaui>
-    <SingleProject>true</SingleProject>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-
-    <ApplicationTitle>MLBB Помощник</ApplicationTitle>
-    <ApplicationId>com.mlbbhelper.app</ApplicationId>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
-    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
-
-    <AndroidPackageFormat>apk</AndroidPackageFormat>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <PublishTrimmed>false</PublishTrimmed>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-
-</Project>
-```
-
----
-
-## БЛОК 2
-
-**Имя файла:**
-```
-MauiProgram.cs
-```
-**Содержимое:**
-```csharp
-namespace MlbbHelper;
-
-public static class MauiProgram
-{
-    public static MauiApp CreateMauiApp()
-    {
-        var builder = MauiApp.CreateBuilder();
-        builder.UseMauiApp<App>();
-        return builder.Build();
-    }
-}
-```
-
----
-
-## БЛОК 3
-
-**Имя файла:**
-```
-App.xaml
-```
-**Содержимое:**
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MlbbHelper.App">
-    <Application.Resources>
-        <ResourceDictionary>
-
-            <Style x:Key="Glass" TargetType="Border">
-                <Setter Property="StrokeShape" Value="RoundRectangle 22" />
-                <Setter Property="StrokeThickness" Value="1" />
-                <Setter Property="Stroke">
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#99BFE8FF" Offset="0" />
-                        <GradientStop Color="#331E6BFF" Offset="1" />
-                    </LinearGradientBrush>
-                </Setter>
-                <Setter Property="Background">
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#3A6FB8FF" Offset="0" />
-                        <GradientStop Color="#1A1A3A8F" Offset="1" />
-                    </LinearGradientBrush>
-                </Setter>
-            </Style>
-
-        </ResourceDictionary>
-    </Application.Resources>
-</Application>
-```
-
----
-
-## БЛОК 4
-
-**Имя файла:**
-```
-App.xaml.cs
-```
-**Содержимое:**
-```csharp
-namespace MlbbHelper;
-
-public partial class App : Application
-{
-    public App()
-    {
-        InitializeComponent();
-        UserAppTheme = AppTheme.Dark;
-    }
-
-    protected override Window CreateWindow(IActivationState? activationState)
-    {
-        return new Window(new NavigationPage(new MainPage()));
-    }
-}
-```
-
----
-
-## БЛОК 5
-
-**Имя файла:**
-```
-MainPage.xaml
-```
-**Содержимое:**
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MlbbHelper.MainPage"
-             NavigationPage.HasNavigationBar="False">
-
-    <Grid>
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#050B1F" Offset="0" />
-                <GradientStop Color="#0B1F4D" Offset="0.55" />
-                <GradientStop Color="#061233" Offset="1" />
-            </LinearGradientBrush>
-        </Grid.Background>
-
-        <Ellipse WidthRequest="320" HeightRequest="320" InputTransparent="True"
-                 HorizontalOptions="Start" VerticalOptions="Start"
-                 TranslationX="-130" TranslationY="-80">
-            <Ellipse.Fill>
-                <RadialGradientBrush Center="0.5,0.5" Radius="0.5">
-                    <GradientStop Color="#552E8BFF" Offset="0" />
-                    <GradientStop Color="#002E8BFF" Offset="1" />
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-
-        <Ellipse WidthRequest="360" HeightRequest="360" InputTransparent="True"
-                 HorizontalOptions="End" VerticalOptions="End"
-                 TranslationX="140" TranslationY="120">
-            <Ellipse.Fill>
-                <RadialGradientBrush Center="0.5,0.5" Radius="0.5">
-                    <GradientStop Color="#4400C8FF" Offset="0" />
-                    <GradientStop Color="#0000C8FF" Offset="1" />
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-
-        <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16,44,16,0" RowSpacing="12">
-
-            <VerticalStackLayout Grid.Row="0" Spacing="2">
-                <Label Text="MLBB Помощник" FontSize="28" FontAttributes="Bold" TextColor="#EAF6FF" />
-                <Label x:Name="PatchLabel" Text="Загрузка данных…" FontSize="13" TextColor="#8FC8FF" />
-            </VerticalStackLayout>
-
-            <Border Grid.Row="1" Style="{StaticResource Glass}" HeightRequest="52" Padding="16,0">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <Label Text="🔍" VerticalOptions="Center" FontSize="16" />
-                    <Entry x:Name="SearchEntry" Grid.Column="1"
-                           Placeholder="Введите имя героя"
-                           PlaceholderColor="#7FA6D6"
-                           TextColor="#EAF6FF"
-                           BackgroundColor="Transparent"
-                           ClearButtonVisibility="WhileEditing"
-                           TextChanged="OnSearchChanged" />
-                </Grid>
-            </Border>
-
-            <Label x:Name="StatusLabel" Grid.Row="2" FontSize="12" TextColor="#7FB4EE" />
-
-            <RefreshView x:Name="Refresh" Grid.Row="3" Refreshing="OnRefreshing" RefreshColor="#4FC3FF">
-                <CollectionView x:Name="HeroList" SelectionMode="None">
-                    <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" Span="3"
-                                         VerticalItemSpacing="10" HorizontalItemSpacing="4" />
-                    </CollectionView.ItemsLayout>
-
-                    <CollectionView.EmptyView>
-                        <Label Text="Герой не найден. Проверьте написание имени."
-                               HorizontalTextAlignment="Center" TextColor="#8FC8FF"
-                               Margin="0,40,0,0" />
-                    </CollectionView.EmptyView>
-
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <VerticalStackLayout Spacing="8" Padding="8,12">
-                                <VerticalStackLayout.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnHeroTapped" />
-                                </VerticalStackLayout.GestureRecognizers>
-
-                                <Border WidthRequest="80" HeightRequest="80"
-                                        HorizontalOptions="Center"
-                                        StrokeShape="RoundRectangle 22"
-                                        Stroke="#7FD6FF" StrokeThickness="2"
-                                        BackgroundColor="#15305F">
-                                    <Border.Shadow>
-                                        <Shadow Brush="#35C6FF" Radius="16" Opacity="0.9" Offset="0,0" />
-                                    </Border.Shadow>
-                                    <Grid>
-                                        <Label Text="{Binding Initial}" FontSize="32" FontAttributes="Bold"
-                                               TextColor="#BFE8FF"
-                                               HorizontalOptions="Center" VerticalOptions="Center" />
-                                        <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
-                                    </Grid>
-                                </Border>
-
-                                <Label Text="{Binding Name}" FontSize="13" TextColor="#EAF6FF"
-                                       HorizontalTextAlignment="Center"
-                                       LineBreakMode="TailTruncation" MaxLines="1" />
-                            </VerticalStackLayout>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </RefreshView>
-        </Grid>
-    </Grid>
-</ContentPage>
-```
-
----
-
-## БЛОК 6
-
-**Имя файла:**
-```
-MainPage.xaml.cs
-```
-**Содержимое:**
-```csharp
-using System.Collections.ObjectModel;
-using MlbbHelper.Models;
-using MlbbHelper.Services;
-
-namespace MlbbHelper;
-
-public partial class MainPage : ContentPage
-{
-    readonly ObservableCollection<Hero> _shown = new();
-    bool _started;
-
-    public MainPage()
-    {
-        InitializeComponent();
-        HeroList.ItemsSource = _shown;
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        if (_started) return;
-        _started = true;
-
-        await DataService.Instance.LoadAsync();
-        ApplyFilter();
-        await CheckUpdatesAsync();
-    }
-
-    void ApplyFilter()
-    {
-        var list = DataService.Instance.Search(SearchEntry.Text ?? "");
-        _shown.Clear();
-        foreach (var hero in list)
-            _shown.Add(hero);
-
-        var data = DataService.Instance.Data;
-        PatchLabel.Text = $"Патч {data.Patch}  •  героев: {data.Heroes.Count}";
-    }
-
-    async Task CheckUpdatesAsync()
-    {
-        StatusLabel.Text = "Проверка обновлений…";
-        var result = await DataService.Instance.UpdateAsync();
-        switch (result)
-        {
-            case UpdateResult.Updated:
-                ApplyFilter();
-                StatusLabel.Text = $"Данные обновлены до патча {DataService.Instance.Data.Patch}";
-                break;
-            case UpdateResult.UpToDate:
-                StatusLabel.Text = "Установлены актуальные данные";
-                break;
-            default:
-                StatusLabel.Text = "Нет соединения. Используются сохранённые данные";
-                break;
-        }
-
-        // Поиск портретов героев; список обновляется, если найдены новые картинки
-        if (await DataService.Instance.ResolveImagesAsync())
-            ApplyFilter();
-    }
-
-    void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyFilter();
-
-    async void OnRefreshing(object? sender, EventArgs e)
-    {
-        await CheckUpdatesAsync();
-        Refresh.IsRefreshing = false;
-    }
-
-    async void OnHeroTapped(object? sender, TappedEventArgs e)
-    {
-        if (sender is BindableObject view && view.BindingContext is Hero hero)
-            await Navigation.PushAsync(new HeroPage(hero));
-    }
-}
-```
-
----
-
-## БЛОК 7
-
-**Имя файла:**
-```
-HeroPage.xaml
-```
-**Содержимое:**
-```xml
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="MlbbHelper.HeroPage"
-             NavigationPage.HasNavigationBar="False">
-
-    <Grid>
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#050B1F" Offset="0" />
-                <GradientStop Color="#0B1F4D" Offset="0.55" />
-                <GradientStop Color="#061233" Offset="1" />
-            </LinearGradientBrush>
-        </Grid.Background>
-
-        <Ellipse WidthRequest="340" HeightRequest="340" InputTransparent="True"
-                 HorizontalOptions="Center" VerticalOptions="Start" TranslationY="-60">
-            <Ellipse.Fill>
-                <RadialGradientBrush Center="0.5,0.5" Radius="0.5">
-                    <GradientStop Color="#552E8BFF" Offset="0" />
-                    <GradientStop Color="#002E8BFF" Offset="1" />
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-        </Ellipse>
-
-        <ScrollView>
-            <VerticalStackLayout Padding="16,44,16,32" Spacing="18">
-
-                <Border Style="{StaticResource Glass}" HorizontalOptions="Start" Padding="16,8">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnBackTapped" />
-                    </Border.GestureRecognizers>
-                    <Label Text="‹  Назад" FontSize="15" TextColor="#EAF6FF" />
-                </Border>
-
-                <VerticalStackLayout Spacing="8" Padding="0,12">
-                    <Border WidthRequest="140" HeightRequest="140" HorizontalOptions="Center"
-                            StrokeShape="RoundRectangle 36"
-                            Stroke="#9BE3FF" StrokeThickness="2.5"
-                            BackgroundColor="#15305F">
-                        <Border.Shadow>
-                            <Shadow Brush="#35C6FF" Radius="30" Opacity="0.95" Offset="0,0" />
-                        </Border.Shadow>
-                        <Grid>
-                            <Label Text="{Binding Initial}" FontSize="64" FontAttributes="Bold"
-                                   TextColor="#BFE8FF"
-                                   HorizontalOptions="Center" VerticalOptions="Center" />
-                            <Image Source="{Binding ImageUrl}" Aspect="AspectFill" />
-                        </Grid>
-                    </Border>
-
-                    <Label Text="{Binding Name}" FontSize="30" FontAttributes="Bold"
-                           TextColor="#EAF6FF" HorizontalTextAlignment="Center" Margin="0,14,0,0" />
-                    <Label Text="{Binding NameEn}" FontSize="14" TextColor="#8FC8FF"
-                           HorizontalTextAlignment="Center" />
-                    <Label Text="{Binding Role}" FontSize="15" TextColor="#4FC3FF"
-                           HorizontalTextAlignment="Center" />
-                    <Label x:Name="PatchLabel" FontSize="12" TextColor="#7FB4EE"
-                           HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-
-                <Label Text="Контрпики" FontSize="22" FontAttributes="Bold" TextColor="#EAF6FF" />
-
-                <Label x:Name="WeaknessLabel" FontSize="14" TextColor="#A9D3FF" IsVisible="False" />
-
-                <Label x:Name="NoCountersLabel" Text="Для этого героя контрпики пока не добавлены."
-                       TextColor="#8FC8FF" IsVisible="False" />
-
-                <VerticalStackLayout x:Name="CounterBox" Spacing="12">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource Glass}" Padding="12">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnCounterTapped" />
-                                </Border.GestureRecognizers>
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
-                                    <Border WidthRequest="64" HeightRequest="64"
-                                            Margin="4"
-                                            StrokeShape="RoundRectangle 18"
-                                            Stroke="#7FD6FF" StrokeThickness="2"
-                                            BackgroundColor="#15305F">
-                                        <Border.Shadow>
-                                            <Shadow Brush="#35C6FF" Radius="12" Opacity="0.9" Offset="0,0" />
-                                        </Border.Shadow>
-                                        <Grid>
-                                            <Label Text="{Binding Hero.Initial}" FontSize="26" FontAttributes="Bold"
-                                                   TextColor="#BFE8FF"
-                                                   HorizontalOptions="Center" VerticalOptions="Center" />
-                                            <Image Source="{Binding Hero.ImageUrl}" Aspect="AspectFill" />
-                                        </Grid>
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
-                                        <Label Text="{Binding Hero.Name}" FontSize="17" FontAttributes="Bold"
-                                               TextColor="#EAF6FF" />
-                                        <Label Text="{Binding Reason}" FontSize="13" TextColor="#A9D3FF" />
-                                    </VerticalStackLayout>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
-
-                <Label Text="Актуальные сборки" FontSize="22" FontAttributes="Bold"
-                       TextColor="#EAF6FF" Margin="0,10,0,0" />
-
-                <Label x:Name="BuildNoteLabel" FontSize="12" TextColor="#8FC8FF" IsVisible="False" />
-
-                <Label x:Name="NoBuildsLabel" Text="Для этого героя сборки пока не добавлены."
-                       TextColor="#8FC8FF" IsVisible="False" />
-
-                <VerticalStackLayout x:Name="BuildBox" Spacing="12">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource Glass}" Padding="16">
-                                <VerticalStackLayout Spacing="10">
-                                    <Label Text="{Binding Title}" FontSize="17" FontAttributes="Bold"
-                                           TextColor="#EAF6FF" />
-                                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Items}">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border StrokeShape="RoundRectangle 12" Stroke="#55A8E8FF"
-                                                        StrokeThickness="1" Padding="10,6"
-                                                        Margin="0,0,8,8" BackgroundColor="#22478CFF">
-                                                    <Label Text="{Binding .}" FontSize="13" TextColor="#EAF6FF" />
-                                                </Border>
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </FlexLayout>
-                                    <Label Text="{Binding Extra}" FontSize="12" TextColor="#8FC8FF" />
-                                </VerticalStackLayout>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
-
-            </VerticalStackLayout>
-        </ScrollView>
-    </Grid>
-</ContentPage>
-```
-
----
-
-## БЛОК 8
-
-**Имя файла:**
-```
-HeroPage.xaml.cs
-```
-**Содержимое:**
-```csharp
-using MlbbHelper.Models;
-using MlbbHelper.Services;
-
-namespace MlbbHelper;
-
-public partial class HeroPage : ContentPage
-{
-    public HeroPage(Hero hero)
-    {
-        InitializeComponent();
-        BindingContext = hero;
-
-        var counters = DataService.Instance.GetCounters(hero);
-        BindableLayout.SetItemsSource(CounterBox, counters);
-        NoCountersLabel.IsVisible = counters.Count == 0;
-
-        if (!string.IsNullOrWhiteSpace(hero.Weakness))
-        {
-            WeaknessLabel.Text = $"Слабые стороны героя: {hero.Weakness}.";
-            WeaknessLabel.IsVisible = true;
-        }
-
-        var (builds, isGeneric) = DataService.Instance.GetBuilds(hero);
-        BindableLayout.SetItemsSource(BuildBox, builds);
-        NoBuildsLabel.IsVisible = builds.Count == 0;
-
-        if (isGeneric && builds.Count > 0)
-        {
-            BuildNoteLabel.Text = $"Это типовая сборка для роли «{hero.Role}», а не личная сборка героя.";
-            BuildNoteLabel.IsVisible = true;
-        }
-
-        PatchLabel.Text = $"Актуально для патча {DataService.Instance.Data.Patch}";
-    }
-
-    async void OnBackTapped(object? sender, TappedEventArgs e)
-    {
-        await Navigation.PopAsync();
-    }
-
-    async void OnCounterTapped(object? sender, TappedEventArgs e)
-    {
-        if (sender is BindableObject view && view.BindingContext is CounterView counter)
-            await Navigation.PushAsync(new HeroPage(counter.Hero));
-    }
-}
-```
-
----
-
-## БЛОК 9
-
-**Имя файла** (папка `Models` создастся сама):
-```
-Models/Hero.cs
-```
-**Содержимое:**
-```csharp
-using System.Text.Json.Serialization;
-
-namespace MlbbHelper.Models;
-
-public class HeroData
-{
-    public string Patch { get; set; } = "";
-    public string Updated { get; set; } = "";
-    public Dictionary<string, List<Build>> RoleBuilds { get; set; } = new();
-    public List<Hero> Heroes { get; set; } = new();
-}
-
-public class Hero
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string NameEn { get; set; } = "";
-    public string Role { get; set; } = "";
-    public string Image { get; set; } = "";
-    public string Weakness { get; set; } = "";
-    public List<string> Counters { get; set; } = new();
-    public List<Build> Builds { get; set; } = new();
-
-    [JsonIgnore] public string? ImageUrl { get; set; }
-    [JsonIgnore] public string Initial => string.IsNullOrEmpty(Name) ? "?" : Name.Substring(0, 1);
-}
-
-public class Build
-{
-    public string Title { get; set; } = "";
-    public List<string> Items { get; set; } = new();
-    public string Emblem { get; set; } = "";
-    public string Spell { get; set; } = "";
-
-    [JsonIgnore] public string Extra => $"Эмблема: {Emblem}  •  Заклинание: {Spell}";
-}
-
-public class CounterView
-{
-    public Hero Hero { get; set; } = null!;
-    public string Reason { get; set; } = "";
-}
-```
-
----
-
-## БЛОК 10 ⚠️ здесь нужна одна правка
-
-**Имя файла** (папка `Services` создастся сама):
-```
-Services/DataService.cs
-```
-**Что исправить после вставки:** в четвёртой строке кода найдите `ВАШ_ЛОГИН` и замените эти слова на **ваше имя пользователя GitHub**. Например, если вы `ivan2025`, получится `"ivan2025/mlbb-helper"`. Остальное не трогайте.
-
-**Содержимое:**
-```csharp
+using System.Globalization;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.Maui.Storage;
 using MlbbHelper.Models;
 
 namespace MlbbHelper.Services;
 
-public static class Constants
+public enum UpdateResult
 {
-    // ЗАМЕНИТЕ слова ВАШ_ЛОГИН на ваше имя пользователя GitHub
-    public const string Repo = "ВАШ_ЛОГИН/mlbb-helper";
-    public const string RawBase = "https://raw.githubusercontent.com/" + Repo + "/main/";
-    public const string DataUrl = RawBase + "Resources/Raw/heroes.json";
-
-    // Вики, откуда автоматически берутся портреты героев
-    public const string WikiApi = "https://mobile-legends.fandom.com/api.php";
+    Updated,
+    UpToDate,
+    Offline
 }
 
-public enum UpdateResult { Updated, UpToDate, Offline }
-
-public class DataService
+public sealed class DataService
 {
-    public static DataService Instance { get; } = new();
-
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
-    static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
-
-    static DataService()
+    const string ApiBase = "https://mlbbdex.com/api/v1";
+    const string PortraitBase = "https://mlbbdex.com/visuels/heros/";
+    static readonly HttpClient Http = CreateHttpClient();
+    static readonly JsonSerializerOptions JsonOptions = new()
     {
-        Http.DefaultRequestHeaders.UserAgent.ParseAdd("MlbbHelper/1.0 (Android)");
-    }
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true
+    };
 
-    string CachePath => Path.Combine(FileSystem.AppDataDirectory, "heroes_cache.json");
-    string ImageCachePath => Path.Combine(FileSystem.AppDataDirectory, "image_cache.json");
-
-    string _rawJson = "";
-    Dictionary<string, string> _images = new();
-
+    public static DataService Instance { get; } = new();
     public HeroData Data { get; private set; } = new();
+
+    string CachePath => Path.Combine(FileSystem.AppDataDirectory, "heroes-cache.json");
+
+    static HttpClient CreateHttpClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("MLBBHelper", "1.0"));
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        return client;
+    }
 
     public async Task LoadAsync()
     {
-        LoadImageCache();
-
-        HeroData? parsed = null;
-        var raw = "";
-
+        HeroData? cached = null;
         try
         {
             if (File.Exists(CachePath))
-            {
-                var cached = File.ReadAllText(CachePath);
-                var p = Parse(cached);
-                if (p != null && p.Heroes.Count > 0)
-                {
-                    parsed = p;
-                    raw = cached.Trim();
-                }
-            }
-        }
-        catch { /* используем встроенные данные */ }
-
-        if (parsed == null)
-        {
-            using var stream = await FileSystem.OpenAppPackageFileAsync("heroes.json");
-            using var reader = new StreamReader(stream);
-            var json = await reader.ReadToEndAsync();
-            parsed = Parse(json) ?? new HeroData();
-            raw = json.Trim();
-        }
-
-        Data = parsed;
-        _rawJson = raw;
-        ApplyImages();
-    }
-
-    public async Task<UpdateResult> UpdateAsync()
-    {
-        try
-        {
-            var url = Constants.DataUrl + "?t=" + DateTime.UtcNow.Ticks;
-            var json = (await Http.GetStringAsync(url)).Trim();
-            var parsed = Parse(json);
-            if (parsed == null || parsed.Heroes.Count == 0)
-                return UpdateResult.Offline;
-
-            if (json == _rawJson)
-                return UpdateResult.UpToDate;
-
-            File.WriteAllText(CachePath, json);
-            Data = parsed;
-            _rawJson = json;
-            ApplyImages();
-            return UpdateResult.Updated;
+                cached = ParseData(await File.ReadAllTextAsync(CachePath));
         }
         catch
         {
-            return UpdateResult.Offline;
+            // При повреждённом кэше приложение использует встроенный справочник.
         }
+
+        if (cached is null || cached.Heroes.Count == 0)
+        {
+            await using var stream = await FileSystem.OpenAppPackageFileAsync("heroes.json");
+            using var reader = new StreamReader(stream);
+            cached = ParseData(await reader.ReadToEndAsync());
+        }
+
+        Data = cached ?? new HeroData();
+        NormalizeData();
     }
 
-    static HeroData? Parse(string json)
+    public async Task<UpdateResult> UpdateCatalogAsync()
+    {
+        var catalogTask = TryGetStringAsync($"{ApiBase}/heroes");
+        var patchesTask = TryGetStringAsync($"{ApiBase}/patches");
+        await Task.WhenAll(catalogTask, patchesTask);
+
+        var catalogJson = await catalogTask;
+        var patchesJson = await patchesTask;
+        var gotResponse = catalogJson is not null || patchesJson is not null;
+        var changed = false;
+
+        if (catalogJson is not null)
+            changed |= MergeCatalog(catalogJson);
+        if (patchesJson is not null)
+            changed |= MergeLatestPatch(patchesJson);
+
+        if (changed)
+            await SaveCacheAsync();
+
+        if (!gotResponse)
+            return UpdateResult.Offline;
+
+        return changed ? UpdateResult.Updated : UpdateResult.UpToDate;
+    }
+
+    public async Task<bool> RefreshHeroDetailsAsync(Hero hero)
+    {
+        var countersTask = TryGetStringAsync($"{ApiBase}/heroes/{Uri.EscapeDataString(hero.Id)}/counters");
+        var buildsTask = TryGetStringAsync($"{ApiBase}/heroes/{Uri.EscapeDataString(hero.Id)}/builds");
+        await Task.WhenAll(countersTask, buildsTask);
+
+        var countersJson = await countersTask;
+        var buildsJson = await buildsTask;
+        var changed = false;
+
+        if (countersJson is not null)
+            changed |= MergeCounters(hero, countersJson);
+        if (buildsJson is not null)
+            changed |= MergeBuilds(hero, buildsJson);
+
+        if (changed)
+            await SaveCacheAsync();
+
+        return changed;
+    }
+
+    public List<Hero> Search(string query)
+    {
+        var normalizedQuery = Normalize(query);
+        var heroes = Data.Heroes
+            .OrderBy(hero => hero.Name, StringComparer.CurrentCultureIgnoreCase);
+
+        if (normalizedQuery.Length == 0)
+            return heroes.ToList();
+
+        return heroes
+            .Where(hero => Normalize(hero.Name).Contains(normalizedQuery)
+                           || Normalize(hero.NameEn).Contains(normalizedQuery)
+                           || Normalize(hero.Id).Replace('-', ' ').Contains(normalizedQuery)
+                           || Normalize(hero.RoleDisplay).Contains(normalizedQuery)
+                           || Normalize(hero.LaneDisplay).Contains(normalizedQuery))
+            .OrderBy(hero => IsPrefix(hero, normalizedQuery) ? 0 : 1)
+            .ThenBy(hero => hero.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+    public Hero? Find(string id) => Data.Heroes.FirstOrDefault(hero =>
+        string.Equals(hero.Id, id, StringComparison.OrdinalIgnoreCase));
+
+    public List<CounterView> GetCounters(Hero hero)
+    {
+        return hero.Counters
+            .Where(counter => counter.Advantage > 0)
+            .OrderByDescending(counter => counter.Advantage)
+            .Select(counter => new CounterView
+            {
+                Hero = Find(counter.HeroId)!,
+                Advantage = counter.Advantage
+            })
+            .Where(counter => counter.Hero is not null)
+            .ToList();
+    }
+
+    public List<Build> GetBuilds(Hero hero) => hero.Builds;
+
+    static bool IsPrefix(Hero hero, string query) =>
+        Normalize(hero.Name).StartsWith(query, StringComparison.Ordinal)
+        || Normalize(hero.NameEn).StartsWith(query, StringComparison.Ordinal);
+
+    async Task<string?> TryGetStringAsync(string url)
     {
         try
         {
-            var data = JsonSerializer.Deserialize<HeroData>(json, Options);
-            if (data == null) return null;
-            foreach (var hero in data.Heroes)
-            {
-                if (string.IsNullOrWhiteSpace(hero.Image)) continue;
-                hero.ImageUrl = hero.Image.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-                    ? hero.Image
-                    : Constants.RawBase + hero.Image;
-            }
-            return data;
+            using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            if (!response.IsSuccessStatusCode)
+                return null;
+            return await response.Content.ReadAsStringAsync();
         }
         catch
         {
@@ -762,161 +165,332 @@ public class DataService
         }
     }
 
-    // ---------- Картинки ----------
-
-    void LoadImageCache()
+    bool MergeCatalog(string json)
     {
         try
         {
-            if (File.Exists(ImageCachePath))
-                _images = JsonSerializer.Deserialize<Dictionary<string, string>>(
-                              File.ReadAllText(ImageCachePath)) ?? new();
+            using var document = JsonDocument.Parse(json);
+            if (!TryGetData(document.RootElement, out var payload) || payload.ValueKind != JsonValueKind.Array)
+                return false;
+
+            var changed = false;
+            foreach (var item in payload.EnumerateArray())
+            {
+                var id = ReadString(item, "slug");
+                var englishName = ReadString(item, "name");
+                if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(englishName))
+                    continue;
+
+                var roles = ReadStrings(item, "roles");
+                var lanes = ReadStrings(item, "lanes");
+                var hero = Find(id);
+                if (hero is null)
+                {
+                    hero = new Hero
+                    {
+                        Id = id,
+                        Name = GameLocalization.HeroName(id, englishName),
+                        NameEn = englishName,
+                        Roles = roles,
+                        Lanes = lanes,
+                        ImageUrl = PortraitBase + Uri.EscapeDataString(id) + "/portrait.webp"
+                    };
+                    Data.Heroes.Add(hero);
+                    changed = true;
+                    continue;
+                }
+
+                var localizedName = GameLocalization.HeroName(id, englishName);
+                if (hero.NameEn != englishName || hero.Name != localizedName)
+                {
+                    hero.NameEn = englishName;
+                    hero.Name = localizedName;
+                    changed = true;
+                }
+
+                if (!hero.Roles.SequenceEqual(roles, StringComparer.OrdinalIgnoreCase))
+                {
+                    hero.Roles = roles;
+                    changed = true;
+                }
+
+                if (!hero.Lanes.SequenceEqual(lanes, StringComparer.OrdinalIgnoreCase))
+                {
+                    hero.Lanes = lanes;
+                    changed = true;
+                }
+
+                if (string.IsNullOrWhiteSpace(hero.Image) && string.IsNullOrWhiteSpace(hero.ImageUrl))
+                {
+                    hero.ImageUrl = PortraitBase + Uri.EscapeDataString(id) + "/portrait.webp";
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
         catch
         {
-            _images = new();
+            return false;
         }
     }
 
-    void ApplyImages()
+    bool MergeLatestPatch(string json)
     {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (!TryGetData(document.RootElement, out var payload))
+                return false;
+
+            JsonElement patch;
+            if (payload.ValueKind == JsonValueKind.Array)
+            {
+                if (payload.GetArrayLength() == 0)
+                    return false;
+                patch = payload[0];
+            }
+            else if (payload.ValueKind == JsonValueKind.Object)
+            {
+                if (payload.TryGetProperty("patches", out var patches) && patches.ValueKind == JsonValueKind.Array)
+                {
+                    if (patches.GetArrayLength() == 0)
+                        return false;
+                    patch = patches[0];
+                }
+                else
+                {
+                    patch = payload;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            var version = ReadString(patch, "version");
+            if (string.IsNullOrWhiteSpace(version) || Data.Patch == version)
+                return false;
+
+            Data.Patch = version;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    static bool MergeCounters(Hero hero, string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (!TryGetData(document.RootElement, out var payload) || payload.ValueKind != JsonValueKind.Object)
+                return false;
+
+            var allRanks = TryGetRank(payload, out var rankData) ? rankData : default;
+            if (allRanks.ValueKind != JsonValueKind.Object
+                || !allRanks.TryGetProperty("weak", out var weak)
+                || weak.ValueKind != JsonValueKind.Array)
+                return false;
+
+            var counters = new List<HeroCounter>();
+            foreach (var item in weak.EnumerateArray().Take(8))
+            {
+                var id = ReadString(item, "slug");
+                if (string.IsNullOrWhiteSpace(id) || id == hero.Id)
+                    continue;
+
+                var advantage = ReadDouble(item, "advantage");
+                if (advantage is null)
+                    continue;
+
+                counters.Add(new HeroCounter
+                {
+                    HeroId = id,
+                    Advantage = Math.Round(Math.Abs(advantage.Value), 1),
+                    Rank = "all"
+                });
+            }
+
+            hero.Counters = counters;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    static bool MergeBuilds(Hero hero, string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (!TryGetData(document.RootElement, out var payload) || payload.ValueKind != JsonValueKind.Object)
+                return false;
+
+            var builds = new List<Build>();
+            foreach (var lane in hero.Lanes)
+            {
+                if (!payload.TryGetProperty(lane, out var laneData) || laneData.ValueKind != JsonValueKind.Object)
+                    continue;
+
+                if (!TryGetRank(laneData, out var rankData) || rankData.ValueKind != JsonValueKind.Array)
+                    continue;
+
+                foreach (var item in rankData.EnumerateArray().Take(3))
+                {
+                    var items = ReadStrings(item, "items");
+                    if (items.Count == 0)
+                        continue;
+
+                    var rank = ReadRankName(laneData);
+                    var build = new Build
+                    {
+                        Title = $"{GameLocalization.LaneName(lane)} · {GameLocalization.RankName(rank)}",
+                        Lane = lane,
+                        Rank = rank,
+                        Items = items,
+                        Emblem = GameLocalization.EmblemName(ReadString(item, "emblem")),
+                        Talents = ReadStrings(item, "talents").Select(GameLocalization.TalentName).ToList(),
+                        Spell = GameLocalization.SpellName(ReadString(item, "spell")),
+                        WinRate = ReadDouble(item, "winRate"),
+                        PickRate = ReadDouble(item, "pickRate")
+                    };
+                    builds.Add(build);
+                }
+            }
+
+            if (builds.Count == 0)
+                return false;
+
+            hero.Builds = builds;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    static string ReadRankName(JsonElement laneData)
+    {
+        foreach (var rank in new[] { "all", "mythic", "honor", "glory", "legend", "epic" })
+            if (laneData.TryGetProperty(rank, out var value) && value.ValueKind == JsonValueKind.Array && value.GetArrayLength() > 0)
+                return rank;
+
+        foreach (var property in laneData.EnumerateObject())
+            if (property.Value.ValueKind == JsonValueKind.Array && property.Value.GetArrayLength() > 0)
+                return property.Name;
+
+        return "all";
+    }
+
+    static bool TryGetRank(JsonElement ranks, out JsonElement selected)
+    {
+        foreach (var rank in new[] { "all", "mythic", "honor", "glory", "legend", "epic" })
+        {
+            if (ranks.TryGetProperty(rank, out selected)
+                && selected.ValueKind is JsonValueKind.Object or JsonValueKind.Array
+                && (selected.ValueKind != JsonValueKind.Array || selected.GetArrayLength() > 0))
+                return true;
+        }
+
+        foreach (var property in ranks.EnumerateObject())
+        {
+            if (property.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array
+                && (property.Value.ValueKind != JsonValueKind.Array || property.Value.GetArrayLength() > 0))
+            {
+                selected = property.Value;
+                return true;
+            }
+        }
+
+        selected = default;
+        return false;
+    }
+
+    static bool TryGetData(JsonElement root, out JsonElement payload)
+    {
+        if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out payload))
+            return true;
+        payload = default;
+        return false;
+    }
+
+    static string ReadString(JsonElement element, string property)
+    {
+        if (element.ValueKind == JsonValueKind.Object
+            && element.TryGetProperty(property, out var value)
+            && value.ValueKind == JsonValueKind.String)
+            return value.GetString()?.Trim() ?? "";
+        return "";
+    }
+
+    static List<string> ReadStrings(JsonElement element, string property)
+    {
+        var values = new List<string>();
+        if (element.ValueKind != JsonValueKind.Object
+            || !element.TryGetProperty(property, out var array)
+            || array.ValueKind != JsonValueKind.Array)
+            return values;
+
+        foreach (var value in array.EnumerateArray())
+            if (value.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(value.GetString()))
+                values.Add(value.GetString()!.Trim());
+        return values;
+    }
+
+    static double? ReadDouble(JsonElement element, string property)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var value))
+            return null;
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var number))
+            return number;
+        if (value.ValueKind == JsonValueKind.String
+            && double.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number))
+            return number;
+        return null;
+    }
+
+    static HeroData? ParseData(string json)
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<HeroData>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    void NormalizeData()
+    {
+        Data.Heroes ??= new List<Hero>();
         foreach (var hero in Data.Heroes)
         {
-            if (string.IsNullOrEmpty(hero.ImageUrl) && _images.TryGetValue(hero.Id, out var url))
-                hero.ImageUrl = url;
+            hero.Roles ??= new List<string>();
+            hero.Lanes ??= new List<string>();
+            hero.Counters ??= new List<HeroCounter>();
+            hero.Builds ??= new List<Build>();
         }
     }
 
-    // Ищет портреты героев на вики. Возвращает true, если найдены новые картинки.
-    public async Task<bool> ResolveImagesAsync()
+    async Task SaveCacheAsync()
     {
-        var missing = Data.Heroes.Where(h => string.IsNullOrEmpty(h.ImageUrl)).ToList();
-        if (missing.Count == 0) return false;
-
-        var changed = false;
-
-        foreach (var batch in missing.Chunk(40))
+        try
         {
-            try
-            {
-                var titles = string.Join("|", batch.Select(h => h.NameEn));
-                var url = Constants.WikiApi +
-                          "?action=query&format=json&prop=pageimages&piprop=thumbnail" +
-                          "&pithumbsize=300&redirects=1&titles=" + Uri.EscapeDataString(titles);
-
-                var json = await Http.GetStringAsync(url);
-                using var doc = JsonDocument.Parse(json);
-
-                if (!doc.RootElement.TryGetProperty("query", out var query)) continue;
-
-                var normalized = ReadAliases(query, "normalized");
-                var redirects = ReadAliases(query, "redirects");
-
-                var thumbs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                if (query.TryGetProperty("pages", out var pages))
-                {
-                    foreach (var page in pages.EnumerateObject())
-                    {
-                        if (page.Value.TryGetProperty("title", out var title) &&
-                            page.Value.TryGetProperty("thumbnail", out var thumb) &&
-                            thumb.TryGetProperty("source", out var source))
-                        {
-                            var t = title.GetString();
-                            var s = source.GetString();
-                            if (!string.IsNullOrEmpty(t) && !string.IsNullOrEmpty(s))
-                                thumbs[t] = s;
-                        }
-                    }
-                }
-
-                foreach (var hero in batch)
-                {
-                    var name = hero.NameEn;
-                    if (normalized.TryGetValue(name, out var n)) name = n;
-                    if (redirects.TryGetValue(name, out var r)) name = r;
-
-                    if (thumbs.TryGetValue(name, out var imageUrl))
-                    {
-                        hero.ImageUrl = imageUrl;
-                        _images[hero.Id] = imageUrl;
-                        changed = true;
-                    }
-                }
-            }
-            catch
-            {
-                // нет сети или вики не ответила: остаются буквы вместо картинок
-            }
+            var json = JsonSerializer.Serialize(Data, JsonOptions);
+            await File.WriteAllTextAsync(CachePath, json);
         }
-
-        if (changed)
+        catch
         {
-            try { File.WriteAllText(ImageCachePath, JsonSerializer.Serialize(_images)); }
-            catch { }
+            // Ошибка записи кэша не должна мешать просмотру справочника.
         }
-
-        return changed;
     }
 
-    static Dictionary<string, string> ReadAliases(JsonElement query, string key)
-    {
-        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (query.TryGetProperty(key, out var array) && array.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var item in array.EnumerateArray())
-            {
-                var from = item.GetProperty("from").GetString();
-                var to = item.GetProperty("to").GetString();
-                if (from != null && to != null) result[from] = to;
-            }
-        }
-        return result;
-    }
-
-    // ---------- Поиск и данные ----------
-
-    static string Normalize(string s) => s.Trim().ToLowerInvariant().Replace('ё', 'е');
-
-    public List<Hero> Search(string query)
-    {
-        var q = Normalize(query);
-        var all = Data.Heroes.OrderBy(h => h.Name).ToList();
-        if (q.Length == 0) return all;
-
-        return all
-            .Where(h => Normalize(h.Name).Contains(q)
-                     || Normalize(h.NameEn).Contains(q)
-                     || Normalize(h.Role).Contains(q))
-            .OrderBy(h => Normalize(h.Name).StartsWith(q) || Normalize(h.NameEn).StartsWith(q) ? 0 : 1)
-            .ThenBy(h => h.Name)
-            .ToList();
-    }
-
-    public Hero? Find(string id) =>
-        Data.Heroes.FirstOrDefault(h => string.Equals(h.Id, id, StringComparison.OrdinalIgnoreCase));
-
-    public List<CounterView> GetCounters(Hero hero)
-    {
-        var result = new List<CounterView>();
-        foreach (var id in hero.Counters)
-        {
-            var target = Find(id);
-            if (target != null)
-                result.Add(new CounterView { Hero = target, Reason = $"Роль: {target.Role}" });
-        }
-        return result;
-    }
-
-    // Возвращает личные сборки героя, а если их нет, то типовые сборки для его роли
-    public (List<Build> Builds, bool IsGeneric) GetBuilds(Hero hero)
-    {
-        if (hero.Builds.Count > 0)
-            return (hero.Builds, false);
-
-        if (Data.RoleBuilds.TryGetValue(hero.Role, out var roleBuilds))
-            return (roleBuilds, true);
-
-        return (new List<Build>(), false);
-    }
+    static string Normalize(string value) => value.Trim().ToLowerInvariant().Replace('ё', 'е');
 }
-```

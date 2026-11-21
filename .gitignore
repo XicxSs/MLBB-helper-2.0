@@ -1,0 +1,19 @@
+# .NET / MAUI build output
+bin/
+obj/
+artifacts/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# IDE and user-specific files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+
+# Python utility cache
+__pycache__/
+*.py[cod]

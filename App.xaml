@@ -1,29 +1,34 @@
-```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MlbbHelper.App">
     <Application.Resources>
         <ResourceDictionary>
+            <Color x:Key="PageBackground">#07101F</Color>
+            <Color x:Key="TextPrimary">#EDF7FF</Color>
+            <Color x:Key="TextMuted">#98B8D9</Color>
+            <Color x:Key="AccentBlue">#54C7FF</Color>
 
             <Style x:Key="Glass" TargetType="Border">
                 <Setter Property="StrokeShape" Value="RoundRectangle 22" />
                 <Setter Property="StrokeThickness" Value="1" />
                 <Setter Property="Stroke">
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#99BFE8FF" Offset="0" />
-                        <GradientStop Color="#331E6BFF" Offset="1" />
-                    </LinearGradientBrush>
+                    <Setter.Value>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#8CC9F7FF" Offset="0" />
+                            <GradientStop Color="#363F82E8" Offset="1" />
+                        </LinearGradientBrush>
+                    </Setter.Value>
                 </Setter>
                 <Setter Property="Background">
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#3A6FB8FF" Offset="0" />
-                        <GradientStop Color="#1A1A3A8F" Offset="1" />
-                    </LinearGradientBrush>
+                    <Setter.Value>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#D91B3B61" Offset="0" />
+                            <GradientStop Color="#C30B1730" Offset="1" />
+                        </LinearGradientBrush>
+                    </Setter.Value>
                 </Setter>
             </Style>
-
         </ResourceDictionary>
     </Application.Resources>
 </Application>
-```
