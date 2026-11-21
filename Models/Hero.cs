@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json.Serialization;
 using Microsoft.Maui.Controls;
@@ -10,11 +11,14 @@ public sealed class HeroData
     public string Patch { get; set; } = "";
     public string Updated { get; set; } = "";
     public string Source { get; set; } = "";
+    public Dictionary<string, string> ItemImages { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public List<Hero> Heroes { get; set; } = new();
 }
 
 public sealed class Hero
 {
+    static readonly ConcurrentDictionary<string, ImageSource> PortraitSources = new(StringComparer.Ordinal);
+
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string NameEn { get; set; } = "";
@@ -36,9 +40,16 @@ public sealed class Hero
         : string.Join(" · ", Lanes.Select(GameLocalization.LaneName));
 
     [JsonIgnore]
-    public ImageSource Portrait => !string.IsNullOrWhiteSpace(ImageUrl)
-        ? ImageSource.FromUri(new Uri(ImageUrl))
-        : ImageSource.FromFile(Image);
+    public ImageSource Portrait
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(ImageUrl))
+                return PortraitSources.GetOrAdd($"uri:{ImageUrl}", _ => ImageSource.FromUri(new Uri(ImageUrl)));
+
+            return PortraitSources.GetOrAdd($"file:{Image}", _ => ImageSource.FromFile(Image));
+        }
+    }
 
     [JsonIgnore]
     public string Initial => string.IsNullOrWhiteSpace(Name) ? "?" : Name[..1];
@@ -99,4 +110,16 @@ public sealed class CounterView
     public string AdvantageText => Advantage > 0
         ? $"Преимущество +{Advantage.ToString("0.#", CultureInfo.GetCultureInfo("ru-RU"))} п. п."
         : "Подходит против этого героя";
+}
+
+public sealed class BuildCardView
+{
+    public Build Build { get; set; } = new();
+    public List<BuildItemView> Items { get; set; } = new();
+}
+
+public sealed class BuildItemView
+{
+    public string Name { get; set; } = "";
+    public ImageSource Image { get; set; } = null!;
 }

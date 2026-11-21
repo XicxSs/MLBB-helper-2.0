@@ -6,7 +6,7 @@
 
 ## Данные и изображения Mobile Legends: Bang Bang
 
-Каталог героев, часть справочных сведений и портреты адаптированы из проекта [MLBBDex](https://github.com/achedon12/mlbb) и [Mobile Legends Wiki](https://mobilelegends.fandom.com/wiki/Mobile_Legends:_Bang_Bang). Эти материалы распространяются по лицензии **Creative Commons Attribution-ShareAlike (CC BY-SA)**. Производные версии в этом приложении распространяются на тех же условиях; при дальнейшем распространении необходимо указывать источник и сохранять лицензию CC BY-SA.
+Каталог героев, часть справочных сведений, портреты героев и значки игровых предметов адаптированы из проекта [MLBBDex](https://github.com/achedon12/mlbb) и [Mobile Legends Wiki](https://mobilelegends.fandom.com/wiki/Mobile_Legends:_Bang_Bang). Эти материалы распространяются по лицензии **Creative Commons Attribution-ShareAlike (CC BY-SA)**. Производные версии в этом приложении распространяются на тех же условиях; при дальнейшем распространении необходимо указывать источник и сохранять лицензию CC BY-SA.
 
 ## Статистика сборок и контрпиков
 

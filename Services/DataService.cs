@@ -1,6 +1,8 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Storage;
 using MlbbHelper.Models;
 
@@ -23,6 +25,7 @@ public sealed class DataService
         PropertyNameCaseInsensitive = true,
         WriteIndented = true
     };
+    static readonly ConcurrentDictionary<string, ImageSource> ItemImageSources = new(StringComparer.OrdinalIgnoreCase);
 
     public static DataService Instance { get; } = new();
     public HeroData Data { get; private set; } = new();
@@ -107,16 +110,18 @@ public sealed class DataService
         return changed;
     }
 
-    public List<Hero> Search(string query)
+    public List<Hero> Search(string query, string laneCode = "")
     {
         var normalizedQuery = Normalize(query);
-        var heroes = Data.Heroes
-            .OrderBy(hero => hero.Name, StringComparer.CurrentCultureIgnoreCase);
+        IEnumerable<Hero> candidates = Data.Heroes;
+
+        if (!string.IsNullOrWhiteSpace(laneCode))
+            candidates = candidates.Where(hero => hero.Lanes.Contains(laneCode, StringComparer.OrdinalIgnoreCase));
 
         if (normalizedQuery.Length == 0)
-            return heroes.ToList();
+            return candidates.OrderBy(hero => hero.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
 
-        return heroes
+        return candidates
             .Where(hero => Normalize(hero.Name).Contains(normalizedQuery)
                            || Normalize(hero.NameEn).Contains(normalizedQuery)
                            || Normalize(hero.Id).Replace('-', ' ').Contains(normalizedQuery)
@@ -145,6 +150,56 @@ public sealed class DataService
     }
 
     public List<Build> GetBuilds(Hero hero) => hero.Builds;
+
+    public List<BuildCardView> GetBuildCards(Hero hero) => hero.Builds
+        .Select(build => new BuildCardView
+        {
+            Build = build,
+            Items = build.Items.Select(name => new BuildItemView
+            {
+                Name = name,
+                Image = GetItemImage(name)
+            }).ToList()
+        })
+        .ToList();
+
+    ImageSource GetItemImage(string name)
+    {
+        if (Data.ItemImages.TryGetValue(name, out var imageFile) && !string.IsNullOrWhiteSpace(imageFile))
+        {
+            var key = $"file:{imageFile}";
+            return ItemImageSources.GetOrAdd(key, _ => ImageSource.FromFile(imageFile));
+        }
+
+        var imageUri = $"https://mlbbdex.com/visuels/objets/{Uri.EscapeDataString(ItemSlug(name))}.webp";
+        var uriKey = $"uri:{imageUri}";
+        return ItemImageSources.GetOrAdd(uriKey, _ => ImageSource.FromUri(new Uri(imageUri)));
+    }
+
+    static string ItemSlug(string name)
+    {
+        var normalized = name.Trim().ToLowerInvariant()
+            .Replace("'s", "-s-", StringComparison.Ordinal)
+            .Replace("'", "", StringComparison.Ordinal);
+        var slug = new System.Text.StringBuilder(normalized.Length);
+        var pendingSeparator = false;
+        foreach (var character in normalized)
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                if (pendingSeparator && slug.Length > 0)
+                    slug.Append('-');
+                slug.Append(character);
+                pendingSeparator = false;
+            }
+            else
+            {
+                pendingSeparator = true;
+            }
+        }
+
+        return slug.ToString();
+    }
 
     static bool IsPrefix(Hero hero, string query) =>
         Normalize(hero.Name).StartsWith(query, StringComparison.Ordinal)
@@ -470,6 +525,8 @@ public sealed class DataService
     void NormalizeData()
     {
         Data.Heroes ??= new List<Hero>();
+        Data.ItemImages ??= new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        Data.ItemImages = new Dictionary<string, string>(Data.ItemImages, StringComparer.OrdinalIgnoreCase);
         foreach (var hero in Data.Heroes)
         {
             hero.Roles ??= new List<string>();

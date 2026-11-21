@@ -8,25 +8,26 @@
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#050B18" Offset="0" />
-                <GradientStop Color="#0A1B39" Offset="0.52" />
-                <GradientStop Color="#061022" Offset="1" />
+                <GradientStop Color="#0B1D3A" Offset="0.5" />
+                <GradientStop Color="#071126" Offset="1" />
             </LinearGradientBrush>
         </Grid.Background>
 
-        <Ellipse WidthRequest="280" HeightRequest="280" InputTransparent="True"
+        <Ellipse WidthRequest="290" HeightRequest="290" InputTransparent="True"
                  HorizontalOptions="Start" VerticalOptions="Start"
-                 TranslationX="-150" TranslationY="-110" Fill="#263E91FF" />
-        <Ellipse WidthRequest="330" HeightRequest="330" InputTransparent="True"
+                 TranslationX="-155" TranslationY="-120" Fill="#2A3E91FF" />
+        <Ellipse WidthRequest="350" HeightRequest="350" InputTransparent="True"
                  HorizontalOptions="End" VerticalOptions="End"
-                 TranslationX="170" TranslationY="170" Fill="#1B00C8FF" />
+                 TranslationX="175" TranslationY="180" Fill="#1C00C8FF" />
 
-        <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="18,18,18,0" RowSpacing="12">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
+              Padding="18,18,18,0" RowSpacing="11">
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
                 <VerticalStackLayout Spacing="3" VerticalOptions="Center">
                     <Label Text="MLBB Помощник" FontSize="27" FontAttributes="Bold"
-                           TextColor="#EDF7FF" />
+                           TextColor="#F0F7FF" />
                     <Label x:Name="PatchLabel" Text="Загрузка справочника…" FontSize="13"
-                           TextColor="#90C9F2" />
+                           TextColor="#93CBF3" />
                 </VerticalStackLayout>
                 <Button Grid.Column="1" Text="i" Clicked="OnAboutTapped"
                         WidthRequest="42" HeightRequest="42" Padding="0"
@@ -40,7 +41,7 @@
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                     <Label Text="⌕" FontSize="25" TextColor="#8CCEFF" VerticalOptions="Center" />
                     <Entry x:Name="SearchEntry" Grid.Column="1"
-                           Placeholder="Введите имя героя"
+                           Placeholder="Поиск героя или роли"
                            PlaceholderColor="#89A9CB"
                            TextColor="#EDF7FF"
                            BackgroundColor="Transparent"
@@ -51,27 +52,40 @@
             </Border>
 
             <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Label x:Name="StatusLabel" Text="Данные доступны и без подключения к сети"
-                       FontSize="11" TextColor="#89ADD3" VerticalOptions="Center"
-                       LineBreakMode="TailTruncation" MaxLines="1" />
+                <Label Text="ВЫБЕРИТЕ ЛИНИЮ" FontSize="10" CharacterSpacing="1.6"
+                       FontAttributes="Bold" TextColor="#7FA8D1" VerticalOptions="Center" />
                 <Label x:Name="CountLabel" Grid.Column="1" Text=""
-                       FontSize="11" TextColor="#A7D8FF" VerticalOptions="Center" />
+                       FontSize="11" TextColor="#B0D8F8" VerticalOptions="Center" />
             </Grid>
 
-            <RefreshView x:Name="Refresh" Grid.Row="3" Refreshing="OnRefreshing"
+            <ScrollView Grid.Row="3" Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never" VerticalScrollBarVisibility="Never">
+                <HorizontalStackLayout x:Name="LaneFilterLayout" Spacing="8" />
+            </ScrollView>
+
+            <Grid Grid.Row="4" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Ellipse WidthRequest="7" HeightRequest="7" Fill="#6DE1C0"
+                         VerticalOptions="Center" />
+                <Label x:Name="StatusLabel" Grid.Column="1"
+                       Text="Данные доступны и без подключения к сети"
+                       FontSize="11" TextColor="#89ADD3" VerticalOptions="Center"
+                       LineBreakMode="TailTruncation" MaxLines="1" />
+            </Grid>
+
+            <RefreshView x:Name="Refresh" Grid.Row="5" Refreshing="OnRefreshing"
                          RefreshColor="#54C7FF">
                 <CollectionView x:Name="HeroList" SelectionMode="None"
                                 Margin="-4,0,-4,18">
                     <CollectionView.ItemsLayout>
-                        <GridItemsLayout Orientation="Vertical" Span="3"
-                                         VerticalItemSpacing="10" HorizontalItemSpacing="7" />
+                        <GridItemsLayout Orientation="Vertical" Span="2"
+                                         VerticalItemSpacing="12" HorizontalItemSpacing="8" />
                     </CollectionView.ItemsLayout>
 
                     <CollectionView.EmptyView>
                         <VerticalStackLayout Spacing="8" Padding="20,48,20,0">
                             <Label Text="Герой не найден" FontSize="18" FontAttributes="Bold"
                                    TextColor="#D9EEFF" HorizontalTextAlignment="Center" />
-                            <Label Text="Проверьте написание имени или попробуйте поискать по английскому названию."
+                            <Label Text="Измените поисковый запрос или выберите другую линию."
                                    FontSize="13" TextColor="#94B4D6"
                                    HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
@@ -83,32 +97,34 @@
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnHeroTapped" CommandParameter="{Binding .}" />
                                 </Grid.GestureRecognizers>
-                                <Border Stroke="#5577B9EF" StrokeThickness="1"
-                                        StrokeShape="RoundRectangle 19"
+                                <Border Stroke="#6381BEEB" StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 22"
                                         BackgroundColor="#C8122038" Padding="0">
                                     <Border.Shadow>
-                                        <Shadow Brush="#3855BFFF" Radius="13" Opacity="0.54" Offset="0,0" />
+                                        <Shadow Brush="#354FA8FF" Radius="16" Opacity="0.48" Offset="0,2" />
                                     </Border.Shadow>
-                                    <Grid RowDefinitions="122,Auto">
+                                    <Grid RowDefinitions="150,Auto">
                                         <Grid>
-                                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 18"
+                                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 21"
                                                     BackgroundColor="#172D50">
                                                 <Image Source="{Binding Portrait}" Aspect="AspectFill" />
                                             </Border>
-                                            <Border VerticalOptions="End" Padding="6,4"
-                                                    BackgroundColor="#D8071227" StrokeThickness="0"
-                                                    StrokeShape="RoundRectangle 10" Margin="5,0,5,5">
-                                                <Label Text="{Binding RoleDisplay}" FontSize="9"
-                                                       TextColor="#C9E9FF" LineBreakMode="TailTruncation"
-                                                       MaxLines="1" HorizontalTextAlignment="Center" />
+                                            <Border HorizontalOptions="Start" VerticalOptions="Start"
+                                                    Margin="8" Padding="8,4"
+                                                    Stroke="#5579C7F0" StrokeThickness="1"
+                                                    StrokeShape="RoundRectangle 12"
+                                                    BackgroundColor="#CC101D35">
+                                                <Label Text="{Binding RoleDisplay}" FontSize="10"
+                                                       FontAttributes="Bold" TextColor="#D5F0FF"
+                                                       LineBreakMode="TailTruncation" MaxLines="1" />
                                             </Border>
                                         </Grid>
-                                        <VerticalStackLayout Grid.Row="1" Padding="7,7,7,9" Spacing="3">
-                                            <Label Text="{Binding Name}" FontSize="13" FontAttributes="Bold"
+                                        <VerticalStackLayout Grid.Row="1" Padding="11,9,11,11" Spacing="3">
+                                            <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
                                                    TextColor="#F1F8FF" LineBreakMode="TailTruncation"
                                                    MaxLines="1" />
-                                            <Label Text="{Binding LaneDisplay}" FontSize="9"
-                                                   TextColor="#9ABBE0" LineBreakMode="TailTruncation"
+                                            <Label Text="{Binding LaneDisplay}" FontSize="10"
+                                                   TextColor="#9EC4E8" LineBreakMode="TailTruncation"
                                                    MaxLines="1" />
                                         </VerticalStackLayout>
                                     </Grid>

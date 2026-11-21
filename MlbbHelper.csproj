@@ -12,8 +12,8 @@
 
     <ApplicationTitle>MLBB Помощник</ApplicationTitle>
     <ApplicationId>com.mlbbhelper.app</ApplicationId>
-    <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>2</ApplicationVersion>
     <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion>24.0</TargetPlatformMinVersion>
 

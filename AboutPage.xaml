@@ -22,7 +22,7 @@
                 <VerticalStackLayout Spacing="4">
                     <Label Text="О приложении" FontSize="28" FontAttributes="Bold"
                            TextColor="#EDF7FF" />
-                    <Label Text="MLBB Помощник · версия 1.0.0" FontSize="13"
+                    <Label Text="MLBB Помощник · версия 1.1.0" FontSize="13"
                            TextColor="#9ABBE0" />
                 </VerticalStackLayout>
 
@@ -43,7 +43,7 @@
                                FontSize="13" TextColor="#C5DCEF" />
                         <Label Text="• Статистика контрпиков и сборок: Rone Arena. Значения винрейта могут различаться по рангу, региону и времени сбора данных."
                                FontSize="13" TextColor="#C5DCEF" />
-                        <Label Text="• Портреты и часть справочных материалов адаптированы из Mobile Legends Wiki и распространяются по лицензии CC BY-SA. Условия лицензии распространяются на производные материалы."
+                        <Label Text="• Портреты героев, значки предметов и часть справочных материалов адаптированы из MLBBDex и Mobile Legends Wiki и распространяются по лицензии CC BY-SA. Условия лицензии распространяются на производные материалы."
                                FontSize="13" TextColor="#C5DCEF" />
                         <Button Text="Открыть MLBBDex" Clicked="OnMlbbDexTapped"
                                 HorizontalOptions="Start" Padding="12,7" CornerRadius="16"

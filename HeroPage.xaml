@@ -16,8 +16,8 @@
                  HorizontalOptions="End" VerticalOptions="Start"
                  TranslationX="130" TranslationY="-120" Fill="#263E91FF" />
 
-        <ScrollView>
-            <VerticalStackLayout Padding="17,18,17,32" Spacing="16">
+        <ScrollView x:Name="PageScroll">
+            <VerticalStackLayout Padding="17,18,17,32" Spacing="15">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                     <Button Text="‹  Назад" Clicked="OnBackTapped"
                             Padding="12,6" CornerRadius="18" FontSize="14"
@@ -29,19 +29,19 @@
                 </Grid>
 
                 <Border Style="{StaticResource Glass}" Padding="13">
-                    <Grid ColumnDefinitions="112,*" ColumnSpacing="14">
-                        <Border WidthRequest="112" HeightRequest="146"
+                    <Grid ColumnDefinitions="108,*" ColumnSpacing="14">
+                        <Border WidthRequest="108" HeightRequest="140"
                                 Stroke="#79D6FF" StrokeThickness="1.5"
                                 StrokeShape="RoundRectangle 20"
                                 BackgroundColor="#172D50">
                             <Border.Shadow>
-                                <Shadow Brush="#45BFFF" Radius="20" Opacity="0.7" Offset="0,0" />
+                                <Shadow Brush="#45BFFF" Radius="20" Opacity="0.62" Offset="0,0" />
                             </Border.Shadow>
                             <Image Source="{Binding Portrait}" Aspect="AspectFill" />
                         </Border>
 
-                        <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
-                            <Label Text="{Binding Name}" FontSize="25" FontAttributes="Bold"
+                        <VerticalStackLayout Grid.Column="1" Spacing="7" VerticalOptions="Center">
+                            <Label Text="{Binding Name}" FontSize="24" FontAttributes="Bold"
                                    TextColor="#F0F8FF" LineBreakMode="WordWrap" />
                             <Label Text="{Binding NameEn}" FontSize="13" TextColor="#9EC1E4" />
                             <Border HorizontalOptions="Start" Padding="10,5"
@@ -50,82 +50,124 @@
                                 <Label Text="{Binding RoleDisplay}" FontSize="12" FontAttributes="Bold"
                                        TextColor="#D6F1FF" />
                             </Border>
-                            <Label Text="{Binding LaneDisplay}" FontSize="12"
+                            <Label Text="{Binding LaneDisplay}" FontSize="11"
                                    TextColor="#A5C8E8" LineBreakMode="WordWrap" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
 
-                <VerticalStackLayout Spacing="3">
-                    <Label Text="Контрпики" FontSize="21" FontAttributes="Bold" TextColor="#EDF7FF" />
-                    <Label Text="Герои, против которых выбранный персонаж показывает более низкий процент побед."
-                           FontSize="12" TextColor="#91B5D9" />
+                <Border Style="{StaticResource Glass}" Padding="4">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                        <Button x:Name="CounterTabButton" Grid.Column="0" Text="Контрпики"
+                                CommandParameter="counters" Clicked="OnSectionTapped"
+                                Padding="8,9" CornerRadius="17" FontSize="13"
+                                FontAttributes="Bold" BorderWidth="1" />
+                        <Button x:Name="BuildTabButton" Grid.Column="1" Text="Сборки"
+                                CommandParameter="builds" Clicked="OnSectionTapped"
+                                Padding="8,9" CornerRadius="17" FontSize="13"
+                                FontAttributes="Bold" BorderWidth="1" />
+                    </Grid>
+                </Border>
+
+                <VerticalStackLayout x:Name="CounterSection" Spacing="10">
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="Контрпики" FontSize="21" FontAttributes="Bold"
+                               TextColor="#EDF7FF" />
+                        <Label Text="Герои, против которых выбранный персонаж показывает более низкий процент побед."
+                               FontSize="12" TextColor="#91B5D9" />
+                    </VerticalStackLayout>
+
+                    <Label x:Name="NoCountersLabel"
+                           Text="Для этого героя пока нет подтверждённых данных о контрпиках."
+                           IsVisible="False" FontSize="13" TextColor="#A9C7E4"
+                           Padding="12,10" />
+                    <VerticalStackLayout x:Name="CounterBox" Spacing="9">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Glass}" Padding="9">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCounterTapped"
+                                                              CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="52,*" ColumnSpacing="11">
+                                        <Border WidthRequest="52" HeightRequest="62"
+                                                Stroke="#538BC8E8" StrokeThickness="1"
+                                                StrokeShape="RoundRectangle 14"
+                                                BackgroundColor="#172D50">
+                                            <Image Source="{Binding Hero.Portrait}" Aspect="AspectFill" />
+                                        </Border>
+                                        <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
+                                            <Label Text="{Binding Hero.Name}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="#EDF7FF" />
+                                            <Label Text="{Binding Hero.RoleDisplay}" FontSize="11"
+                                                   TextColor="#9CBDE0" />
+                                            <Label Text="{Binding AdvantageText}" FontSize="11"
+                                                   FontAttributes="Bold" TextColor="#74D9FF" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
 
-                <Label x:Name="NoCountersLabel"
-                       Text="Для этого героя пока нет подтверждённых данных о контрпиках."
-                       IsVisible="False" FontSize="13" TextColor="#A9C7E4"
-                       Padding="12,10" />
-                <VerticalStackLayout x:Name="CounterBox" Spacing="9">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource Glass}" Padding="9">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnCounterTapped"
-                                                          CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                                <Grid ColumnDefinitions="52,*" ColumnSpacing="11">
-                                    <Border WidthRequest="52" HeightRequest="62"
-                                            Stroke="#538BC8E8" StrokeThickness="1"
-                                            StrokeShape="RoundRectangle 14"
-                                            BackgroundColor="#172D50">
-                                        <Image Source="{Binding Hero.Portrait}" Aspect="AspectFill" />
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1" Spacing="3" VerticalOptions="Center">
-                                        <Label Text="{Binding Hero.Name}" FontSize="15" FontAttributes="Bold"
-                                               TextColor="#EDF7FF" />
-                                        <Label Text="{Binding Hero.RoleDisplay}" FontSize="11"
-                                               TextColor="#9CBDE0" />
-                                        <Label Text="{Binding AdvantageText}" FontSize="11"
-                                               FontAttributes="Bold" TextColor="#74D9FF" />
+                <VerticalStackLayout x:Name="BuildSection" IsVisible="False" Spacing="10">
+                    <VerticalStackLayout Spacing="3">
+                        <Label Text="Актуальные сборки" FontSize="21" FontAttributes="Bold"
+                               TextColor="#EDF7FF" />
+                        <Label x:Name="BuildNoteLabel"
+                               Text="Популярные варианты по игровой статистике."
+                               FontSize="12" TextColor="#91B5D9" />
+                    </VerticalStackLayout>
+
+                    <Label x:Name="NoBuildsLabel"
+                           Text="Сборки для этого героя пока не опубликованы."
+                           IsVisible="False" FontSize="13" TextColor="#A9C7E4"
+                           Padding="12,10" />
+                    <VerticalStackLayout x:Name="BuildBox" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Glass}" Padding="12">
+                                    <VerticalStackLayout Spacing="9">
+                                        <Label Text="{Binding Build.Title}" FontSize="13" FontAttributes="Bold"
+                                               TextColor="#75D8FF" />
+
+                                        <ScrollView Orientation="Horizontal"
+                                                    HorizontalScrollBarVisibility="Never"
+                                                    VerticalScrollBarVisibility="Never">
+                                            <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Items}"
+                                                                   Spacing="5">
+                                                <BindableLayout.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <VerticalStackLayout WidthRequest="54" Spacing="3">
+                                                            <Border WidthRequest="48" HeightRequest="48"
+                                                                    Stroke="#5577A8D3" StrokeThickness="1"
+                                                                    StrokeShape="RoundRectangle 13"
+                                                                    BackgroundColor="#252B4562" Padding="3">
+                                                                <Image Source="{Binding Image}" Aspect="AspectFit" />
+                                                            </Border>
+                                                            <Label Text="{Binding Name}" FontSize="9"
+                                                                   TextColor="#BDD6EC"
+                                                                   HorizontalTextAlignment="Center"
+                                                                   LineBreakMode="TailTruncation"
+                                                                   MaxLines="2" HeightRequest="23" />
+                                                        </VerticalStackLayout>
+                                                    </DataTemplate>
+                                                </BindableLayout.ItemTemplate>
+                                            </HorizontalStackLayout>
+                                        </ScrollView>
+
+                                        <Label Text="{Binding Build.Extra}" FontSize="12"
+                                               TextColor="#B4D1EA" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding Build.TalentDisplay}" FontSize="11"
+                                               TextColor="#91B5D9" LineBreakMode="WordWrap" />
+                                        <Label Text="{Binding Build.StatisticsDisplay}" FontSize="11"
+                                               FontAttributes="Bold" TextColor="#82E4C5" />
                                     </VerticalStackLayout>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
-
-                <VerticalStackLayout Spacing="3" Margin="0,5,0,0">
-                    <Label Text="Актуальные сборки" FontSize="21" FontAttributes="Bold"
-                           TextColor="#EDF7FF" />
-                    <Label x:Name="BuildNoteLabel"
-                           Text="Популярные варианты по игровой статистике. Названия предметов приведены на английском языке."
-                           FontSize="12" TextColor="#91B5D9" />
-                </VerticalStackLayout>
-
-                <Label x:Name="NoBuildsLabel"
-                       Text="Сборки для этого героя пока не опубликованы."
-                       IsVisible="False" FontSize="13" TextColor="#A9C7E4"
-                       Padding="12,10" />
-                <VerticalStackLayout x:Name="BuildBox" Spacing="10">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource Glass}" Padding="13">
-                                <VerticalStackLayout Spacing="8">
-                                    <Label Text="{Binding Title}" FontSize="13" FontAttributes="Bold"
-                                           TextColor="#75D8FF" />
-                                    <Label Text="{Binding ItemsDisplay}" FontSize="14" FontAttributes="Bold"
-                                           TextColor="#F0F7FF" LineBreakMode="WordWrap" />
-                                    <Label Text="{Binding Extra}" FontSize="12" TextColor="#B4D1EA"
-                                           LineBreakMode="WordWrap" />
-                                    <Label Text="{Binding TalentDisplay}" FontSize="11" TextColor="#91B5D9"
-                                           LineBreakMode="WordWrap" />
-                                    <Label Text="{Binding StatisticsDisplay}" FontSize="11" FontAttributes="Bold"
-                                           TextColor="#82E4C5" />
-                                </VerticalStackLayout>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
 
                 <Label x:Name="PatchLabel" FontSize="11" TextColor="#7899BD"

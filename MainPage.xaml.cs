@@ -1,5 +1,5 @@
-using System.Collections.ObjectModel;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 using MlbbHelper.Models;
 using MlbbHelper.Services;
 
@@ -7,13 +7,23 @@ namespace MlbbHelper;
 
 public partial class MainPage : ContentPage
 {
-    readonly ObservableCollection<Hero> _shownHeroes = new();
+    static readonly (string Code, string Label)[] LaneFilters =
+    {
+        ("", "Все линии"),
+        ("Exp", "Опыт"),
+        ("Jungle", "Лес"),
+        ("Mid", "Центр"),
+        ("Gold", "Золото"),
+        ("Roam", "Роум")
+    };
+
+    string _selectedLaneCode = "";
     bool _started;
 
     public MainPage()
     {
         InitializeComponent();
-        HeroList.ItemsSource = _shownHeroes;
+        CreateLaneFilters();
     }
 
     protected override async void OnAppearing()
@@ -37,18 +47,50 @@ public partial class MainPage : ContentPage
         }
     }
 
+    void CreateLaneFilters()
+    {
+        foreach (var lane in LaneFilters)
+        {
+            var button = new Button
+            {
+                Text = lane.Label,
+                CommandParameter = lane.Code,
+                Padding = new Thickness(13, 7),
+                CornerRadius = 18,
+                FontSize = 12,
+                FontAttributes = FontAttributes.Bold,
+                MinimumHeightRequest = 36,
+                BorderWidth = 1
+            };
+            button.Clicked += OnLaneFilterTapped;
+            LaneFilterLayout.Children.Add(button);
+        }
+
+        UpdateLaneFilterStyles();
+    }
+
+    void UpdateLaneFilterStyles()
+    {
+        foreach (var button in LaneFilterLayout.Children.OfType<Button>())
+        {
+            var selected = string.Equals(button.CommandParameter as string,
+                _selectedLaneCode, StringComparison.OrdinalIgnoreCase);
+            button.BackgroundColor = Color.FromArgb(selected ? "#315A9FD0" : "#8E16253B");
+            button.BorderColor = Color.FromArgb(selected ? "#93D5FFFF" : "#386998C2");
+            button.TextColor = Color.FromArgb(selected ? "#F0FAFF" : "#A8C4E0");
+        }
+    }
+
     void ApplyFilter()
     {
-        var matches = DataService.Instance.Search(SearchEntry.Text ?? string.Empty);
-        _shownHeroes.Clear();
-        foreach (var hero in matches)
-            _shownHeroes.Add(hero);
+        var matches = DataService.Instance.Search(SearchEntry.Text ?? string.Empty, _selectedLaneCode);
+        HeroList.ItemsSource = matches;
 
         var data = DataService.Instance.Data;
         PatchLabel.Text = string.IsNullOrWhiteSpace(data.Patch)
-            ? "Справочник MLBB"
-            : $"Актуальные данные · патч {data.Patch}";
-        CountLabel.Text = HeroCount(data.Heroes.Count);
+            ? "Справочник Mobile Legends: Bang Bang"
+            : $"Актуальный патч · {data.Patch}";
+        CountLabel.Text = HeroCount(matches.Count);
     }
 
     async Task CheckForUpdatesAsync()
@@ -59,13 +101,23 @@ public partial class MainPage : ContentPage
 
         StatusLabel.Text = result switch
         {
-            UpdateResult.Updated => "Справочник обновлён. Новые данные сохранены на устройстве.",
-            UpdateResult.UpToDate => "Справочник проверен. Данные доступны и без сети.",
+            UpdateResult.Updated => "Справочник обновлён и сохранён на устройстве.",
+            UpdateResult.UpToDate => "Справочник актуален. Он доступен и без сети.",
             _ => "Нет подключения к сети. Используются сохранённые данные."
         };
     }
 
     void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyFilter();
+
+    void OnLaneFilterTapped(object? sender, EventArgs e)
+    {
+        if (sender is not Button { CommandParameter: string laneCode })
+            return;
+
+        _selectedLaneCode = laneCode;
+        UpdateLaneFilterStyles();
+        ApplyFilter();
+    }
 
     async void OnRefreshing(object? sender, EventArgs e)
     {

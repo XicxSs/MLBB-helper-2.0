@@ -4,14 +4,14 @@
 Usage:
   python3 tools/build_seed_data.py /path/to/mlbbdex-checkout
 
-The checkout must contain src/data/game/{heroes,statistics,patches,sync}.json
-and public/visuels/heros/<slug>/portrait.webp. ImageMagick's `convert` is used
-only to create Android-friendly JPEG copies of the portraits.
+The checkout must contain the game JSON files and the hero/item visuals under
+public/visuels. ImageMagick's `convert` creates Android-friendly JPEG copies.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -131,6 +131,18 @@ def translated(mapping: dict[str, str], key: str) -> str:
     return mapping.get(key, key)
 
 
+def item_asset_name(name: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+    return f"item_{slug}.jpg"
+
+
+def item_source_slug(name: str) -> str:
+    # Preserve the possessive "'s" form used in the wiki's filenames while
+    # handling names such as "Haas' Claws" that have no trailing s.
+    normalized = name.lower().replace("'s", "-s-").replace("'", "")
+    return re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")
+
+
 def rank_entries(role_data: dict) -> tuple[str, list]:
     for rank in ("all", "mythic", "honor", "glory", "legend", "epic"):
         entries = role_data.get(rank)
@@ -165,11 +177,40 @@ def main(source: Path) -> None:
     statistics = read_json(game / "statistics.json")
     patches = read_json(game / "patches.json")
     sync = read_json(game / "sync.json")
+    items = read_json(game / "items.json")
+    visuals = read_json(game / "visuals.json")
 
     destination = Path("Resources/Images")
     destination.mkdir(parents=True, exist_ok=True)
-    for stale_image in list(destination.glob("hero-*.jpg")) + list(destination.glob("hero_*.jpg")):
+    stale_images = list(destination.glob("hero-*.jpg")) + list(destination.glob("hero_*.jpg"))
+    stale_images += list(destination.glob("item_*.jpg"))
+    for stale_image in stale_images:
         stale_image.unlink()
+    item_images = {}
+    item_slugs = {item["name"]: item["slug"] for item in items}
+    used_build_items = {
+        item_name
+        for hero_builds in statistics.get("builds", {}).values()
+        for lane_builds in hero_builds.values()
+        for entries in lane_builds.values()
+        if isinstance(entries, list)
+        for entry in entries
+        for item_name in entry.get("items", [])
+    }
+    all_item_names = sorted(set(item_slugs) | used_build_items)
+    for name in all_item_names:
+        slug = item_slugs.get(name, item_source_slug(name))
+        image_name = item_asset_name(name)
+        relative_image = visuals.get("items", {}).get(slug, f"/visuels/objets/{slug}.webp")
+        source_image = source / "public" / relative_image.lstrip("/")
+        if not source_image.is_file():
+            raise FileNotFoundError(f"Missing item icon for {name}: {source_image}")
+        subprocess.run(
+            ["convert", str(source_image), "-quality", "88", str(destination / image_name)],
+            check=True,
+        )
+        item_images[name] = image_name
+
     records = []
     ids = {hero["slug"] for hero in heroes}
 
@@ -219,13 +260,14 @@ def main(source: Path) -> None:
         "Patch": patch_list[0].get("version", "") if patch_list else "",
         "Updated": sync.get("date", ""),
         "Source": "MLBBDex и Rone Arena",
+        "ItemImages": item_images,
         "Heroes": records,
     }
     target = Path("Resources/Raw/heroes.json")
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {len(records)} heroes to {target}")
-    print(f"Wrote portraits to {destination}")
+    print(f"Wrote {len(item_images)} item icons and portraits to {destination}")
 
 
 if __name__ == "__main__":
