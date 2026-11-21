@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-apk:
@@ -79,3 +79,19 @@ jobs:
           path: artifacts/MLBB-helper-1.0.0.apk
           if-no-files-found: error
           retention-days: 90
+
+      - name: Publish first APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="v1.0.0"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $tag already exists; keeping its published, signed APK unchanged."
+          else
+            gh release create "$tag" artifacts/MLBB-helper-1.0.0.apk \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "MLBB Помощник 1.0.0" \
+              --notes "Первый установочный APK MLBB Помощника. Контрпики, список героев и номер патча проверяются через публичный API; встроенный справочник доступен без интернета."
+          fi
