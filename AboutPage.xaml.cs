@@ -17,7 +17,6 @@ public partial class AboutPage : ContentPage
         }
         catch
         {
-            // Справочник продолжает работать и без внешнего браузера.
         }
     }
 

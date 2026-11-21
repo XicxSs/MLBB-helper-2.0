@@ -84,8 +84,6 @@ TALENT_NAMES = {
     "Weakness Finder": "Искатель слабостей",
     "Weapons Master": "Мастер оружия",
 }
-# Russian spellings used by the game's Russian-speaking community. English
-# names remain searchable and are shown as a secondary name in hero profiles.
 HERO_NAMES_RU = {
     "aamon": "Аамон", "akai": "Акай", "aldous": "Олдос", "alice": "Алиса",
     "alpha": "Альфа", "alucard": "Алукард", "angela": "Ангела", "argus": "Аргус",
@@ -137,8 +135,6 @@ def item_asset_name(name: str) -> str:
 
 
 def item_source_slug(name: str) -> str:
-    # Preserve the possessive "'s" form used in the wiki's filenames while
-    # handling names such as "Haas' Claws" that have no trailing s.
     normalized = name.lower().replace("'s", "-s-").replace("'", "")
     return re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")
 

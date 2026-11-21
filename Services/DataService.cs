@@ -50,7 +50,6 @@ public sealed class DataService
         }
         catch
         {
-            // При повреждённом кэше приложение использует встроенный справочник.
         }
 
         if (cached is null || cached.Heroes.Count == 0)
@@ -545,7 +544,6 @@ public sealed class DataService
         }
         catch
         {
-            // Ошибка записи кэша не должна мешать просмотру справочника.
         }
     }
 

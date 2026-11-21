@@ -46,8 +46,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # GitHub-hosted runners are temporary, so each run creates a new key.
-          # This means Android may require uninstalling an older APK first.
           keytool -genkeypair -noprompt \
             -keystore "$RUNNER_TEMP/mlbb-helper.keystore" \
             -storetype JKS \
