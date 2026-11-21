@@ -99,7 +99,7 @@ public static class GameLocalization
 
     static readonly Dictionary<string, string> HeroNames = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["aamon"] = "Аамон", ["akai"] = "Акай", ["aldous"] = "Олдос", ["alice"] = "Алиса",
+        ["aamon"] = "Эймон", ["akai"] = "Акай", ["aldous"] = "Олдос", ["alice"] = "Алиса",
         ["alpha"] = "Альфа", ["alucard"] = "Алукард", ["angela"] = "Ангела", ["argus"] = "Аргус",
         ["arlott"] = "Арлотт", ["atlas"] = "Атлас", ["aulus"] = "Аулус", ["aurora"] = "Аврора",
         ["badang"] = "Баданг", ["balmond"] = "Бальмонд", ["bane"] = "Бэйн", ["barats"] = "Баратс",
