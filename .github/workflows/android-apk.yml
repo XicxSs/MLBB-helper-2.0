@@ -1,0 +1,101 @@
+name: Android APK
+
+on:
+  push:
+    branches:
+      - arena/d0df6241-mlbb-helper-2-0
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mlbb-helper-android-release
+  cancel-in-progress: false
+
+jobs:
+  build-apk:
+    name: Build installable Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v7
+
+      - name: Install Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Android workload
+        run: dotnet workload install maui-android
+
+      - name: Validate offline hero and item data
+        run: python3 tools/validate_data.py
+
+      - name: Restore packages
+        run: dotnet restore MlbbHelper.csproj
+
+      - name: Build and sign APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          keytool -genkeypair -noprompt \
+            -keystore "$RUNNER_TEMP/mlbb-helper.keystore" \
+            -storetype JKS \
+            -storepass mlbbhelper \
+            -keypass mlbbhelper \
+            -alias mlbbhelper \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=MLBB Helper, OU=Community, O=MLBB Helper, C=RU"
+
+          dotnet publish MlbbHelper.csproj \
+            --configuration Release \
+            --framework net10.0-android \
+            --output "$RUNNER_TEMP/mlbb-publish" \
+            -p:AndroidPackageFormat=apk \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="$RUNNER_TEMP/mlbb-helper.keystore" \
+            -p:AndroidSigningKeyAlias=mlbbhelper \
+            -p:AndroidSigningStorePass=mlbbhelper \
+            -p:AndroidSigningKeyPass=mlbbhelper
+
+          mkdir -p artifacts
+          apk_file="$(find "$RUNNER_TEMP/mlbb-publish" -maxdepth 1 -type f -name '*.apk' -print -quit)"
+          if [[ -z "$apk_file" ]]; then
+            echo "Publish completed without producing an APK."
+            find "$RUNNER_TEMP/mlbb-publish" -maxdepth 2 -type f -print
+            exit 1
+          fi
+          cp "$apk_file" artifacts/MLBB-helper-1.1.0.apk
+          sha256sum artifacts/MLBB-helper-1.1.0.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: MLBB-helper-Android-APK
+          path: artifacts/MLBB-helper-1.1.0.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="v1.1.0"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $tag already exists; keeping its published APK unchanged."
+          else
+            gh release create "$tag" artifacts/MLBB-helper-1.1.0.apk \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "MLBB Помощник 1.1.0" \
+              --notes "Обновление: выбор героев по линии, отдельные разделы контрпиков и сборок, значки предметов и обновлённый интерфейс. Из-за создания нового ключа подписи переход с версии 1.0.0 может потребовать удалить старую версию перед установкой; удаление может стереть локальные данные. Каждый APK, собранный отдельным запуском GitHub Actions, подписывается новым временным ключом и может потребовать переустановки."
+          fi

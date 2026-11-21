@@ -1,78 +1,139 @@
-```csharp
-using System.Collections.ObjectModel;
-using MlbbHelper.Models;
-using MlbbHelper.Services;
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MlbbHelper.MainPage"
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="#07101F">
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#050B18" Offset="0" />
+                <GradientStop Color="#0B1D3A" Offset="0.5" />
+                <GradientStop Color="#071126" Offset="1" />
+            </LinearGradientBrush>
+        </Grid.Background>
 
-namespace MlbbHelper;
+        <Ellipse WidthRequest="290" HeightRequest="290" InputTransparent="True"
+                 HorizontalOptions="Start" VerticalOptions="Start"
+                 TranslationX="-155" TranslationY="-120" Fill="#2A3E91FF" />
+        <Ellipse WidthRequest="350" HeightRequest="350" InputTransparent="True"
+                 HorizontalOptions="End" VerticalOptions="End"
+                 TranslationX="175" TranslationY="180" Fill="#1C00C8FF" />
 
-public partial class MainPage : ContentPage
-{
-    readonly ObservableCollection<Hero> _shown = new();
-    bool _started;
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
+              Padding="18,18,18,0" RowSpacing="11">
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <VerticalStackLayout Spacing="3" VerticalOptions="Center">
+                    <Label Text="MLBB Помощник" FontSize="27" FontAttributes="Bold"
+                           TextColor="#F0F7FF" />
+                    <Label x:Name="PatchLabel" Text="Загрузка справочника…" FontSize="13"
+                           TextColor="#93CBF3" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="i" Clicked="OnAboutTapped"
+                        WidthRequest="42" HeightRequest="42" Padding="0"
+                        CornerRadius="21" FontSize="17" FontAttributes="Bold"
+                        TextColor="#D8F2FF" BackgroundColor="#25325370"
+                        BorderColor="#6C9BC8E8" BorderWidth="1"
+                        VerticalOptions="Center" />
+            </Grid>
 
-    public MainPage()
-    {
-        InitializeComponent();
-        HeroList.ItemsSource = _shown;
-    }
+            <Border Grid.Row="1" Style="{StaticResource Glass}" HeightRequest="54" Padding="15,0">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <Label Text="⌕" FontSize="25" TextColor="#8CCEFF" VerticalOptions="Center" />
+                    <Entry x:Name="SearchEntry" Grid.Column="1"
+                           Placeholder="Поиск героя или роли"
+                           PlaceholderColor="#89A9CB"
+                           TextColor="#EDF7FF"
+                           BackgroundColor="Transparent"
+                           ClearButtonVisibility="WhileEditing"
+                           ReturnType="Search"
+                           TextChanged="OnSearchChanged" />
+                </Grid>
+            </Border>
 
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        if (_started) return;
-        _started = true;
+            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Label Text="ВЫБЕРИТЕ ЛИНИЮ" FontSize="10" CharacterSpacing="1.6"
+                       FontAttributes="Bold" TextColor="#7FA8D1" VerticalOptions="Center" />
+                <Label x:Name="CountLabel" Grid.Column="1" Text=""
+                       FontSize="11" TextColor="#B0D8F8" VerticalOptions="Center" />
+            </Grid>
 
-        await DataService.Instance.LoadAsync();
-        ApplyFilter();
-        await CheckUpdatesAsync();
-    }
+            <ScrollView Grid.Row="3" Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never" VerticalScrollBarVisibility="Never">
+                <HorizontalStackLayout x:Name="LaneFilterLayout" Spacing="8" />
+            </ScrollView>
 
-    void ApplyFilter()
-    {
-        var list = DataService.Instance.Search(SearchEntry.Text ?? "");
-        _shown.Clear();
-        foreach (var hero in list)
-            _shown.Add(hero);
+            <Grid Grid.Row="4" ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Ellipse WidthRequest="7" HeightRequest="7" Fill="#6DE1C0"
+                         VerticalOptions="Center" />
+                <Label x:Name="StatusLabel" Grid.Column="1"
+                       Text="Данные доступны и без подключения к сети"
+                       FontSize="11" TextColor="#89ADD3" VerticalOptions="Center"
+                       LineBreakMode="TailTruncation" MaxLines="1" />
+            </Grid>
 
-        var data = DataService.Instance.Data;
-        PatchLabel.Text = $"Патч {data.Patch}  •  героев: {data.Heroes.Count}";
-    }
+            <RefreshView x:Name="Refresh" Grid.Row="5" Refreshing="OnRefreshing"
+                         RefreshColor="#54C7FF">
+                <CollectionView x:Name="HeroList" SelectionMode="None"
+                                Margin="-4,0,-4,18">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical" Span="2"
+                                         VerticalItemSpacing="12" HorizontalItemSpacing="8" />
+                    </CollectionView.ItemsLayout>
 
-    async Task CheckUpdatesAsync()
-    {
-        StatusLabel.Text = "Проверка обновлений…";
-        var result = await DataService.Instance.UpdateAsync();
-        switch (result)
-        {
-            case UpdateResult.Updated:
-                ApplyFilter();
-                StatusLabel.Text = $"Данные обновлены до патча {DataService.Instance.Data.Patch}";
-                break;
-            case UpdateResult.UpToDate:
-                StatusLabel.Text = "Установлены актуальные данные";
-                break;
-            default:
-                StatusLabel.Text = "Нет соединения. Используются сохранённые данные";
-                break;
-        }
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Spacing="8" Padding="20,48,20,0">
+                            <Label Text="Герой не найден" FontSize="18" FontAttributes="Bold"
+                                   TextColor="#D9EEFF" HorizontalTextAlignment="Center" />
+                            <Label Text="Измените поисковый запрос или выберите другую линию."
+                                   FontSize="13" TextColor="#94B4D6"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
 
-        // Поиск портретов героев; список обновляется, если найдены новые картинки
-        if (await DataService.Instance.ResolveImagesAsync())
-            ApplyFilter();
-    }
-
-    void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyFilter();
-
-    async void OnRefreshing(object? sender, EventArgs e)
-    {
-        await CheckUpdatesAsync();
-        Refresh.IsRefreshing = false;
-    }
-
-    async void OnHeroTapped(object? sender, TappedEventArgs e)
-    {
-        if (sender is BindableObject view && view.BindingContext is Hero hero)
-            await Navigation.PushAsync(new HeroPage(hero));
-    }
-}
-```
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="3">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnHeroTapped" CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Border Stroke="#6381BEEB" StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 22"
+                                        BackgroundColor="#C8122038" Padding="0">
+                                    <Border.Shadow>
+                                        <Shadow Brush="#354FA8FF" Radius="16" Opacity="0.48" Offset="0,2" />
+                                    </Border.Shadow>
+                                    <Grid RowDefinitions="150,Auto">
+                                        <Grid>
+                                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 21"
+                                                    BackgroundColor="#172D50">
+                                                <Image Source="{Binding Portrait}" Aspect="AspectFill" />
+                                            </Border>
+                                            <Border HorizontalOptions="Start" VerticalOptions="Start"
+                                                    Margin="8" Padding="8,4"
+                                                    Stroke="#5579C7F0" StrokeThickness="1"
+                                                    StrokeShape="RoundRectangle 12"
+                                                    BackgroundColor="#CC101D35">
+                                                <Label Text="{Binding RoleDisplay}" FontSize="10"
+                                                       FontAttributes="Bold" TextColor="#D5F0FF"
+                                                       LineBreakMode="TailTruncation" MaxLines="1" />
+                                            </Border>
+                                        </Grid>
+                                        <VerticalStackLayout Grid.Row="1" Padding="11,9,11,11" Spacing="3">
+                                            <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold"
+                                                   TextColor="#F1F8FF" LineBreakMode="TailTruncation"
+                                                   MaxLines="1" />
+                                            <Label Text="{Binding LaneDisplay}" FontSize="10"
+                                                   TextColor="#9EC4E8" LineBreakMode="TailTruncation"
+                                                   MaxLines="1" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+        </Grid>
+    </Grid>
+</ContentPage>

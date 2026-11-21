@@ -1,0 +1,107 @@
+name: Play Store AAB
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version name, for example 1.1.1
+        required: true
+        default: 1.1.1
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mlbb-helper-play-store-aab
+  cancel-in-progress: false
+
+jobs:
+  build-aab:
+    name: Build signed Android App Bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APP_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v7
+
+      - name: Install Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Android workload
+        run: dotnet workload install maui-android
+
+      - name: Validate version and signing configuration
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$APP_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must use the format X.Y.Z, for example 1.1.1."
+            exit 1
+          fi
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Missing GitHub Actions secret: $name"
+              exit 1
+            fi
+          done
+          echo "APP_VERSION_CODE=$((GITHUB_RUN_NUMBER + 2))" >> "$GITHUB_ENV"
+
+      - name: Restore packages
+        run: dotnet restore MlbbHelper.csproj
+
+      - name: Build signed AAB
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          keystore="$RUNNER_TEMP/mlbb-play-upload.jks"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          dotnet publish MlbbHelper.csproj \
+            --configuration Release \
+            --framework net10.0-android \
+            --output "$RUNNER_TEMP/mlbb-publish" \
+            -p:AndroidPackageFormat=aab \
+            -p:AndroidKeyStore=true \
+            -p:AndroidSigningKeyStore="$keystore" \
+            -p:AndroidSigningKeyAlias="$ANDROID_KEY_ALIAS" \
+            -p:AndroidSigningStorePass="$ANDROID_KEYSTORE_PASSWORD" \
+            -p:AndroidSigningKeyPass="$ANDROID_KEY_PASSWORD" \
+            -p:ApplicationDisplayVersion="$APP_VERSION" \
+            -p:ApplicationVersion="$APP_VERSION_CODE"
+          aab_file="$(find "$RUNNER_TEMP/mlbb-publish" -type f -name '*.aab' -print -quit)"
+          if [[ -z "$aab_file" ]]; then
+            echo "Publish completed without producing an Android App Bundle."
+            find "$RUNNER_TEMP/mlbb-publish" -maxdepth 4 -type f -print
+            exit 1
+          fi
+          mkdir -p artifacts
+          cp "$aab_file" "artifacts/MLBBHelper-$APP_VERSION.aab"
+          sha256sum "artifacts/MLBBHelper-$APP_VERSION.aab"
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: MLBBHelper-Play-${{ inputs.version }}
+          path: artifacts/MLBBHelper-${{ inputs.version }}.aab
+          if-no-files-found: error
+          retention-days: 90

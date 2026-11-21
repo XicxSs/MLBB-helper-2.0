@@ -1,4 +1,5 @@
-```csharp
+using Microsoft.Maui.Hosting;
+
 namespace MlbbHelper;
 
 public static class MauiProgram
@@ -10,4 +11,3 @@ public static class MauiProgram
         return builder.Build();
     }
 }
-```
